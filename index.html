@@ -249,31 +249,36 @@ $("form").addEventListener("submit", async e => {
 refresh();
 
 /* ===== Kontrol Pemutar Musik ===== */
-const bgMusic = $("bg-music"); // Menggunakan fungsi $() yang sudah ada di kodemu
+const bgMusic = document.getElementById("bg-music");
 const musicBtn = document.getElementById("music-btn");
-let isPlaying = false;
 
 function toggleMusic() {
-  if (isPlaying) {
-    bgMusic.pause();
-    musicBtn.textContent = "🔇";
-  } else {
-    // Catch digunakan agar tidak error di console jika browser memblokir play()
+  // Langsung cek status asli dari elemen audio
+  if (bgMusic.paused) {
     bgMusic.play().then(() => {
       musicBtn.textContent = "🔊";
-    }).catch(e => console.log("Menunggu interaksi klik dari user..."));
+    }).catch(e => console.log("Menunggu interaksi layar..."));
+  } else {
+    bgMusic.pause();
+    musicBtn.textContent = "🔇";
   }
-  isPlaying = !isPlaying;
 }
 
+// 1. Reaksi saat tombol diklik
 musicBtn.addEventListener("click", (e) => {
-  e.stopPropagation(); // Mencegah bentrok dengan event klik di body
+  e.stopPropagation();
   toggleMusic();
 });
 
-// Otomatis putar lagu saat pengunjung pertama kali mengeklik di mana saja (opsional)
-document.body.addEventListener("click", () => {
-  if (!isPlaying) toggleMusic();
+// 2. Putar otomatis saat layar disentuh/diklik pertama kali
+document.addEventListener("pointerdown", function initAudio() {
+  if (bgMusic.paused) {
+    bgMusic.play().then(() => {
+      musicBtn.textContent = "🔊";
+    }).catch(e => {});
+  }
+  // Langsung hapus tugas ini setelah disentuh 1x agar tidak berat
+  document.removeEventListener("pointerdown", initAudio);
 }, { once: true });
 </script>
 </body>
