@@ -136,45 +136,45 @@ addEventListener("pointermove", e => {
   });
 });
 
-/* ===== Dinding doa =====
-   Isi FIREBASE_PROJECT_ID dengan ID proyek Firebase (Firestore) agar doa
-   tersimpan online dan terlihat oleh semua pengunjung.
-   Kosong = mode uji: doa hanya tersimpan di browser ini. */
-const FIREBASE_PROJECT_ID = "gsa-doa";
-const COLLECTION = "doa";
-const BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
-const ONLINE = !!FIREBASE_PROJECT_ID;
+/* ===== Dinding doa (Migrasi ke Supabase) ===== */
+// 1. Ganti URL ini dengan Project URL Supabase kamu
+const SUPABASE_URL = "https://wzwicmrktxwmdsyjrujb.supabase.co"; 
+// 2. Ganti dengan anon/public key Supabase kamu
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6d2ljbXJrdHh3bWRzeWpydWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA3ODI2OTYsImV4cCI6MjEwNjM1ODY5Nn0.XLDuA7lyJhWsPxzk7Le0y5f8EwJEl39oBSkguRBzOBM"; 
+const ONLINE = SUPABASE_URL.includes("PROJECT-ID") ? false : true; // Akan otomatis online jika URL sudah diganti
 
 async function loadDoa() {
   if (!ONLINE) {
     try { return JSON.parse(localStorage.getItem("doa") || "[]"); } catch { return []; }
   }
-  const res = await fetch(`${BASE}:runQuery`, {
-    method: "POST",
-    body: JSON.stringify({ structuredQuery: {
-      from: [{ collectionId: COLLECTION }],
-      orderBy: [{ field: { fieldPath: "ts" }, direction: "DESCENDING" }],
-      limit: 60 } })
+  // Ambil 60 doa terbaru dari Supabase
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/doa?select=*&order=ts.desc&limit=60`, {
+    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
   });
   if (!res.ok) throw new Error("load");
-  return (await res.json()).filter(x => x.document).map(x => {
-    const f = x.document.fields;
-    return { name: f.name.stringValue, msg: f.msg.stringValue, ts: Number(f.ts.integerValue) };
-  });
+  return await res.json();
 }
+
 async function saveDoa(item) {
   if (!ONLINE) {
     const list = await loadDoa(); list.unshift(item);
     try { localStorage.setItem("doa", JSON.stringify(list.slice(0, 60))); } catch {}
     return;
   }
-  const res = await fetch(`${BASE}/${COLLECTION}`, {
+  // Simpan doa ke Supabase
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/doa`, {
     method: "POST",
-    body: JSON.stringify({ fields: {
-      name: { stringValue: item.name }, msg: { stringValue: item.msg }, ts: { integerValue: String(item.ts) } } })
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(item)
   });
   if (!res.ok) throw new Error("save");
 }
+
 function render(list) {
   const wall = $("wall");
   wall.textContent = "";
@@ -188,30 +188,33 @@ function render(list) {
     c.append(p, h, t); wall.append(c);
   });
 }
+
 async function refresh() {
   try { render(await loadDoa()); }
   catch { $("wall").innerHTML = '<p class="empty">Doa belum bisa dimuat. Coba muat ulang halaman.</p>'; }
 }
+
 $("msg").addEventListener("input", e => $("count").textContent = e.target.value.length + "/280");
 $("form").addEventListener("submit", async e => {
   e.preventDefault();
   const st = $("status"), btn = $("send");
   const last = Number(localStorage.getItem("doaLast") || 0);
   if (Date.now() - last < 30000) { st.className = "err"; st.textContent = "Tunggu sebentar sebelum mengirim doa lagi."; return; }
+  
   const item = { name: $("name").value.trim().slice(0, 40), msg: $("msg").value.trim().slice(0, 280), ts: Date.now() };
   if (!item.name || !item.msg) return;
+  
   btn.disabled = true; st.className = ""; st.textContent = "Mengirim...";
   try {
     await saveDoa(item);
     try { localStorage.setItem("doaLast", String(Date.now())); } catch {}
     $("form").reset(); $("count").textContent = "0/280";
-    st.textContent = ONLINE ? "Terkirim. Terima kasih atas doamu." : "Tersimpan di browser ini (mode uji, belum online).";
+    st.textContent = ONLINE ? "Terkirim. Terima kasih atas doamu." : "Tersimpan di browser ini (mode uji, karena Supabase Key belum disetel).";
     refresh();
   } catch { st.className = "err"; st.textContent = "Gagal mengirim. Coba lagi sebentar."; }
   btn.disabled = false;
 });
 refresh();
-//if (ONLINE) setInterval(refresh, 20000);
 </script>
 </body>
-</html>s
+</html>
