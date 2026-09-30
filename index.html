@@ -10,6 +10,34 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* ===== Tombol Musik ===== */
+.music-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--blue-2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 99;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+.music-btn:hover {
+  transform: scale(1.1);
+  background: var(--blue);
+}
+@media (max-width: 600px) {
+  .music-btn { bottom: 16px; right: 16px; width: 44px; height: 44px; font-size: 18px; }
+}
 :root{--blue:#2f80ff;--blue-2:#1b4fb0;--card:#1d1d1f;--line:#2e2e32;--pill:#d6e6ff;--link:#0a84ff;--muted:#b9c2d3}
 *{box-sizing:border-box;margin:0}
 html{scroll-behavior:smooth}
@@ -68,6 +96,10 @@ footer{text-align:center;color:#7d8596;font-size:13px;padding:8px 20px 32px}
 </style>
 </head>
 <body>
+<audio id="bg-music" loop>
+  <source src="lagu.mp3" type="audio/mpeg">
+</audio>
+<button id="music-btn" class="music-btn" aria-label="Putar Musik" title="Putar/Jeda Musik">🔇</button>
 <nav aria-label="Navigasi utama">
   <img src="woNnVDSsABNLZsKfqvF7AJwYUM.avif" alt="Google Student Ambassador">
   <ul>
@@ -215,6 +247,34 @@ $("form").addEventListener("submit", async e => {
   btn.disabled = false;
 });
 refresh();
+
+/* ===== Kontrol Pemutar Musik ===== */
+const bgMusic = $("bg-music"); // Menggunakan fungsi $() yang sudah ada di kodemu
+const musicBtn = document.getElementById("music-btn");
+let isPlaying = false;
+
+function toggleMusic() {
+  if (isPlaying) {
+    bgMusic.pause();
+    musicBtn.textContent = "🔇";
+  } else {
+    // Catch digunakan agar tidak error di console jika browser memblokir play()
+    bgMusic.play().then(() => {
+      musicBtn.textContent = "🔊";
+    }).catch(e => console.log("Menunggu interaksi klik dari user..."));
+  }
+  isPlaying = !isPlaying;
+}
+
+musicBtn.addEventListener("click", (e) => {
+  e.stopPropagation(); // Mencegah bentrok dengan event klik di body
+  toggleMusic();
+});
+
+// Otomatis putar lagu saat pengunjung pertama kali mengeklik di mana saja (opsional)
+document.body.addEventListener("click", () => {
+  if (!isPlaying) toggleMusic();
+}, { once: true });
 </script>
 </body>
 </html>
