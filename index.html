@@ -140,8 +140,7 @@ addEventListener("pointermove", e => {
    Isi FIREBASE_PROJECT_ID dengan ID proyek Firebase (Firestore) agar doa
    tersimpan online dan terlihat oleh semua pengunjung.
    Kosong = mode uji: doa hanya tersimpan di browser ini. */
-const FIREBASE_PROJECT_ID = "
-1094471883740";
+const FIREBASE_PROJECT_ID = "gsa-doa";
 const COLLECTION = "doa";
 const BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
 const ONLINE = !!FIREBASE_PROJECT_ID;
