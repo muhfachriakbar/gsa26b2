@@ -146,8 +146,8 @@ function tick() {
   const left = target - Date.now();
   if (left <= 0) {
     clearInterval(timer);
-    $("clock").outerHTML = '<div class="done">Waktunya pengumuman<small>Cek email kamu sekarang, termasuk folder Spam dan Promosi.</small></div>';
-    $("tag").textContent = "Pengumuman GSA terpilih sudah tiba";
+    $("clock").outerHTML = '<div class="done">Pengumuman GSA akan segera di umumkan!<small>Pengumuman akan disampaikan secara bertahap di Email masing masing<small>Cek email kamu secara berkala, termasuk folder Spam dan Promosi.</small></div>';
+    $("tag").textContent = "Pengumuman GSA akan segera di umumkan!";
     return;
   }
   $("d").textContent = pad(Math.floor(left / 864e5));
